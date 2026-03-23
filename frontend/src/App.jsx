@@ -16,7 +16,7 @@ function App() {
   });
 
  // Asegúrate de que tenga la "s" en https
-    const API_URL = "https://brijoyeria-erp.onrender.com/api/productos";
+    const API_URL = "https://brijoyeria-erp.onrender.com/api";
 
   const cargarDatos = async () => {
     try {
