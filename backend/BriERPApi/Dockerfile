@@ -21,4 +21,5 @@ COPY --from=publish /app/publish .
 # Copiamos también la base de datos para que viaje con la app
 COPY joyeria.db . 
 
+RUN chmod -R 777 /app
 ENTRYPOINT ["dotnet", "BriERPApi.dll"]
