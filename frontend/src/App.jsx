@@ -13,7 +13,7 @@ function App() {
     nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: ''
   });
 
-  // ⚠️ CAMBIA ESTO: Usa la URL de tu BACKEND (Web Service), no la del sitio estático
+  // ⚠️ CAMBIA ESTO: Usa la URL de tu BACKEND (Web Service), 
   const API_URL = "https://brijoyeria-erp.onrender.com/api"; 
 
   const cargarDatos = async () => {
