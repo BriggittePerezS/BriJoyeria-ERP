@@ -31,18 +31,19 @@ function App() {
   };
 
   const registrarJoya = async (e) => {
-    e.preventDefault();
-    setCargando(true);
-    try {
-      await axios.post(`${API_URL}/productos`, nuevaJoya);
-      setNuevaJoya({ nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: '' });
-      await cargarDatos();
-    } catch (error) {
-      alert("❌ Error al conectar con el servidor.");
-    } finally {
-      setCargando(false);
-    }
-  };
+  e.preventDefault();
+  try {
+    const joyaFinal = {
+      nombre: nuevaJoya.nombre,
+      categoria: nuevaJoya.categoria,
+      precio: parseFloat(nuevaJoya.precio), // Forzamos que sea número
+      stock: parseInt(nuevaJoya.stock),     // Forzamos que sea entero
+      imagenUrl: nuevaJoya.imagenUrl
+    };
+    await axios.post(`${API_URL}/productos`, joyaFinal);
+    // ... resto del código
+  } catch(error) { ... }
+};
 
   // FUNCIÓN PARA GUARDAR EDICIÓN (NUEVO)
 const guardarEdicion = async () => {
