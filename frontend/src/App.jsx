@@ -8,15 +8,15 @@ function App() {
   const [cargando, setCargando] = useState(false);
   const [filtroActivo, setFiltroActivo] = useState('Todos');
 
-  // ESTADO PARA EDICIÓN (NUEVO)
+  // ESTADO PARA EDICIÓN
   const [editandoJoya, setEditandoJoya] = useState(null);
 
   const [nuevaJoya, setNuevaJoya] = useState({
     nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: ''
   });
 
- // Asegúrate de que tenga la "s" en https
-    const API_URL = "https://brijoyeria-erp.onrender.com/api";
+  // URL BASE (Sin "/productos" al final para que no se duplique)
+  const API_URL = "https://brijoyeria-erp.onrender.com/api";
 
   const cargarDatos = async () => {
     try {
@@ -26,48 +26,57 @@ function App() {
       setProductosFiltrados(resProds.data);
       setReporte(resRep.data);
     } catch (error) {
-      console.error("Error al cargar:", error);
+      console.error("Error al cargar datos:", error);
     }
   };
 
   const registrarJoya = async (e) => {
-  e.preventDefault();
-  try {
-    const joyaFinal = {
-      nombre: nuevaJoya.nombre,
-      categoria: nuevaJoya.categoria,
-      precio: parseFloat(nuevaJoya.precio), // Forzamos que sea número
-      stock: parseInt(nuevaJoya.stock),     // Forzamos que sea entero
-      imagenUrl: nuevaJoya.imagenUrl
-    };
-    await axios.post(`${API_URL}/productos`, joyaFinal);
-    // ... resto del código
-  } catch(error) { ... }
-};
+    e.preventDefault();
+    setCargando(true);
+    try {
+      // Mapeo de nombres exactos para C# (Mayúsculas) y conversión de tipos
+      const joyaAEnviar = {
+        Nombre: nuevaJoya.nombre,
+        Categoria: nuevaJoya.categoria || "General",
+        Precio: parseFloat(nuevaJoya.precio) || 0,
+        Stock: parseInt(nuevaJoya.stock) || 1,
+        ImagenUrl: nuevaJoya.imagenUrl || ""
+      };
 
-  // FUNCIÓN PARA GUARDAR EDICIÓN (NUEVO)
-const guardarEdicion = async () => {
-  try {
-    const joyaValidada = {
-      Id: editandoJoya.id, // C# suele preferir la primera letra en Mayúscula
-      Nombre: editandoJoya.nombre,
-      Categoria: editandoJoya.categoria || "General",
-      Precio: parseFloat(editandoJoya.precio),
-      Stock: parseInt(editandoJoya.stock || 1),
-      ImagenUrl: editandoJoya.imagenUrl || "",
-      Descripcion: editandoJoya.descripcion || ""
-    };
+      await axios.post(`${API_URL}/productos`, joyaAEnviar);
+      
+      setNuevaJoya({ nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: '' });
+      await cargarDatos();
+      alert("💎 ¡Joya registrada con éxito en la bóveda!");
+    } catch (error) {
+      console.error("Error al registrar:", error.response?.data);
+      alert("❌ Error al conectar con el servidor. Revisa los datos.");
+    } finally {
+      setCargando(false);
+    }
+  };
 
-    await axios.put(`${API_URL}/productos/${editandoJoya.id}`, joyaValidada);
-    
-    setEditandoJoya(null);
-    await cargarDatos();
-    alert("✅ ¡Bóveda actualizada con éxito!");
-  } catch (error) {
-    console.error("Error detallado:", error.response?.data);
-    alert("Error al guardar. Revisa la consola (F12).");
-  }
-};
+  const guardarEdicion = async () => {
+    try {
+      const joyaValidada = {
+        Id: editandoJoya.id,
+        Nombre: editandoJoya.nombre,
+        Categoria: editandoJoya.categoria || "General",
+        Precio: parseFloat(editandoJoya.precio),
+        Stock: parseInt(editandoJoya.stock || 1),
+        ImagenUrl: editandoJoya.imagenUrl || ""
+      };
+
+      await axios.put(`${API_URL}/productos/${editandoJoya.id}`, joyaValidada);
+      
+      setEditandoJoya(null);
+      await cargarDatos();
+      alert("✅ ¡Bóveda actualizada con éxito!");
+    } catch (error) {
+      console.error("Error detallado:", error.response?.data);
+      alert("Error al guardar la edición.");
+    }
+  };
   
   const eliminarJoya = async (id) => {
     if (window.confirm("¿Segura que quieres eliminar esta pieza de la bóveda?")) {
@@ -110,11 +119,11 @@ const guardarEdicion = async () => {
           <div className="bg-[#0a111e] px-8 py-5 rounded-2xl border border-gray-800 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#00f2ea] opacity-50"></div>
             <p className="text-[10px] text-[#00f2ea] font-bold uppercase tracking-widest mb-1">Capital Total</p>
-            <p className="text-3xl font-mono text-white">${reporte?.valorInventarioTotal?.toLocaleString()}</p>
+            <p className="text-3xl font-mono text-white">${reporte?.valorInventarioTotal?.toLocaleString() || '0'}</p>
           </div>
           <div className="bg-[#0a111e] px-8 py-5 rounded-2xl border border-gray-800 text-center">
             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">Stock</p>
-            <p className="text-3xl font-mono text-[#00f2ea]">{reporte?.piezasTotales}</p>
+            <p className="text-3xl font-mono text-[#00f2ea]">{reporte?.piezasTotales || '0'}</p>
           </div>
         </div>
       </header>
@@ -135,19 +144,24 @@ const guardarEdicion = async () => {
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Categoría</label>
               <select className="p-4 bg-[#050b14] text-white rounded-xl border border-gray-800 outline-none focus:border-[#00f2ea] transition-all cursor-pointer" value={nuevaJoya.categoria} onChange={(e) => setNuevaJoya({...nuevaJoya, categoria: e.target.value})} required>
                 <option value="">Seleccionar...</option>
-                <option value="Anillo">ANILLO</option><option value="Collar">COLLAR</option><option value="Zarcillo">ZARCILLO</option><option value="Reloj">RELOJ</option>
+                <option value="Anillo">ANILLO</option>
+                <option value="Collar">COLLAR</option>
+                <option value="Zarcillo">ZARCILLO</option>
+                <option value="Reloj">RELOJ</option>
               </select>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Precio ($)</label>
-              <input type="number" placeholder="0.00" className="p-4 bg-[#050b14] text-white rounded-xl border border-gray-800 outline-none focus:border-[#00f2ea] transition-all" value={nuevaJoya.precio} onChange={(e) => setNuevaJoya({...nuevaJoya, precio: e.target.value})} required />
+              <input type="number" step="0.01" placeholder="0.00" className="p-4 bg-[#050b14] text-white rounded-xl border border-gray-800 outline-none focus:border-[#00f2ea] transition-all" value={nuevaJoya.precio} onChange={(e) => setNuevaJoya({...nuevaJoya, precio: e.target.value})} required />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] uppercase font-bold text-gray-500 ml-2">Imagen URL</label>
               <input type="text" placeholder="http://imagen.jpg" className="p-4 bg-[#050b14] text-white rounded-xl border border-gray-800 outline-none focus:border-[#00f2ea] transition-all" value={nuevaJoya.imagenUrl} onChange={(e) => setNuevaJoya({...nuevaJoya, imagenUrl: e.target.value})} />
             </div>
             <div className="flex items-end">
-              <button type="submit" disabled={cargando} className="w-full bg-[#00f2ea] text-[#050b14] font-black rounded-xl hover:shadow-[0_0_30px_rgba(0,242,234,0.4)] transition-all h-[58px] uppercase tracking-tighter">{cargando ? '...' : 'Registrar'}</button>
+              <button type="submit" disabled={cargando} className="w-full bg-[#00f2ea] text-[#050b14] font-black rounded-xl hover:shadow-[0_0_30px_rgba(0,242,234,0.4)] transition-all h-[58px] uppercase tracking-tighter">
+                {cargando ? '...' : 'Registrar'}
+              </button>
             </div>
           </form>
         </div>
@@ -167,7 +181,7 @@ const guardarEdicion = async () => {
             <div className="h-48 w-full overflow-hidden bg-gray-900 relative">
               <img src={p.imagenUrl || 'https://via.placeholder.com/400?text=No+Image'} alt={p.nombre} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               <div className="absolute top-4 left-4">
-                <span className="text-[9px] font-black text-[#00f2ea] bg-[#050b14]/80 px-3 py-1 rounded tracking-widest border border-[#00f2ea]/20 backdrop-blur-md">{p.categoria.toUpperCase()}</span>
+                <span className="text-[9px] font-black text-[#00f2ea] bg-[#050b14]/80 px-3 py-1 rounded tracking-widest border border-[#00f2ea]/20 backdrop-blur-md">{(p.categoria || "Joyeria").toUpperCase()}</span>
               </div>
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                 <button onClick={() => setEditandoJoya(p)} className="bg-[#00f2ea]/10 hover:bg-[#00f2ea] text-[#00f2ea] hover:text-[#050b14] p-2 rounded-lg transition-all">
@@ -184,7 +198,7 @@ const guardarEdicion = async () => {
               <div className="flex justify-between items-end border-t border-gray-800/50 pt-6">
                 <div>
                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Asset Value</p>
-                  <p className="text-3xl font-mono text-white">${parseFloat(p.precio).toLocaleString()}</p>
+                  <p className="text-3xl font-mono text-white">${(p.precio || 0).toLocaleString()}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Stock</p>
@@ -201,9 +215,11 @@ const guardarEdicion = async () => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-[#0a111e] p-8 rounded-3xl border border-[#00f2ea] w-full max-w-sm">
             <h3 className="text-xl font-bold mb-6 text-white">Editar {editandoJoya.nombre}</h3>
-            <input className="w-full p-4 mb-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" value={editandoJoya.nombre} onChange={e => setEditandoJoya({...editandoJoya, nombre: e.target.value})} />
-            <input className="w-full p-4 mb-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" value={editandoJoya.imagenUrl || ''} onChange={e => setEditandoJoya({...editandoJoya, imagenUrl: e.target.value})} />
-            <input className="w-full p-4 mb-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" value={editandoJoya.precio} onChange={e => setEditandoJoya({...editandoJoya, precio: e.target.value})} />
+            <div className="flex flex-col gap-4">
+              <input className="w-full p-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" placeholder="Nombre" value={editandoJoya.nombre} onChange={e => setEditandoJoya({...editandoJoya, nombre: e.target.value})} />
+              <input className="w-full p-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" placeholder="Imagen URL" value={editandoJoya.imagenUrl || ''} onChange={e => setEditandoJoya({...editandoJoya, imagenUrl: e.target.value})} />
+              <input className="w-full p-4 bg-[#050b14] border border-gray-800 rounded-xl text-white" type="number" placeholder="Precio" value={editandoJoya.precio} onChange={e => setEditandoJoya({...editandoJoya, precio: e.target.value})} />
+            </div>
             <div className="flex gap-4 mt-6">
               <button onClick={guardarEdicion} className="flex-1 bg-[#00f2ea] text-[#050b14] font-bold py-3 rounded-xl">GUARDAR</button>
               <button onClick={() => setEditandoJoya(null)} className="flex-1 bg-gray-800 text-white py-3 rounded-xl">CERRAR</button>
