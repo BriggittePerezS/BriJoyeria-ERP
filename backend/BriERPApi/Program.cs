@@ -12,9 +12,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("https://brijoyeria-erp-sw9h.onrender.com") // <--- TU URL DE STATIC SITE
+        policy.WithOrigins("https://brijoyeria-erp-sw9h.onrender.com", 
+                           "https://brijoyeria-erp-sw9h.onrender.com/") // <--- TU URL DE STATIC SITE
               .AllowAnyMethod()
               .AllowAnyHeader();
+              SetIsOriginAllowed(_ => true); // Esto es un "comodín" de emergencia
     });
 });
 
