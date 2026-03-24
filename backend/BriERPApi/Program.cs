@@ -8,15 +8,14 @@ builder.Services.AddDbContext<BriDbContext>(options =>
     options.UseSqlite("Data Source=joyeria.db"));
 
 // 2. Configurar CORS (Permisos de conexión)
+// Usaremos la política más flexible permitida para solucionar el bloqueo
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("https://brijoyeria-erp-sw9h.onrender.com", 
-                           "https://brijoyeria-erp-sw9h.onrender.com/") // <--- TU URL DE STATIC SITE
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
-              SetIsOriginAllowed(_ => true); // Esto es un "comodín" de emergencia
     });
 });
 
@@ -26,11 +25,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- ⚠️ ESTE ES EL CAMBIO CLAVE: CORS VA PRIMERO ---
+// --- ⚠️ IMPORTANTE: CORS DEBE IR ANTES DE CUALQUIER OTRA COSA ---
 app.UseCors("AllowAll");
-// --------------------------------------------------
+// ------------------------------------------------------------------
 
-// Configuración de Swagger
+// Configuración de Swagger (para pruebas)
 app.UseSwagger();
 app.UseSwaggerUI();
 
