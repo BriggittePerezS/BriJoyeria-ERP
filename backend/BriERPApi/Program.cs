@@ -3,39 +3,32 @@ using BriERPApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configurar la Conexión a la Base de Datos (SQLite)
+// 1. Base de datos
 builder.Services.AddDbContext<BriDbContext>(options =>
     options.UseSqlite("Data Source=joyeria.db"));
 
-// 2. Configurar CORS (Permisos de conexión)
-// Usaremos la política más flexible permitida para solucionar el bloqueo
+// 2. CORS (Puertas abiertas para tu joyería)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- ⚠️ IMPORTANTE: CORS DEBE IR ANTES DE CUALQUIER OTRA COSA ---
+// 3. Configuración de Middleware
 app.UseCors("AllowAll");
-// ------------------------------------------------------------------
 
-// Configuración de Swagger (para pruebas)
-app.UseSwagger();
-app.UseSwaggerUI();
+// RUTA DE PRUEBA: Si entras a la URL principal, verás este mensaje
+app.MapGet("/", () => "¡El Backend de Bri Joyería está vivo!");
 
 app.UseAuthorization();
 app.MapControllers();
 
-// 4. Configuración para Render (Puerto dinámico)
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Run("http://0.0.0.0:8080");
+// 4. EL CAMBIO VITAL: Usar el puerto que Render asigne o el 8080 por defecto
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Run($"http://0.0.0.0:{port}");
