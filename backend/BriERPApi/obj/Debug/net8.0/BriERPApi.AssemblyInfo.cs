@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BriERPApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a042dd2b775cef87a83e2e6b3a1a90069f015062")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3ed890e18231cf322c5a91bdca9889a948af49f5")]
 [assembly: System.Reflection.AssemblyProductAttribute("BriERPApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BriERPApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
