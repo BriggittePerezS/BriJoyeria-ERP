@@ -6,18 +6,19 @@ using BriERPApi.Models;
 namespace BriERPApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class BriController : ControllerBase
+    [Route("api/[controller]")] // Ahora esto se traducirá automáticamente a /api/productos
+    public class ProductosController : ControllerBase
     {
         private readonly BriDbContext _context;
 
-        public BriController(BriDbContext context)
+        public ProductosController(BriDbContext context)
         {
             _context = context;
         }
 
         // 1. OBTENER TODOS LOS PRODUCTOS
-        [HttpGet("productos")]
+        // URL: GET /api/productos
+        [HttpGet]
         public async Task<IActionResult> GetProductos()
         {
             var productos = await _context.Productos.ToListAsync();
@@ -25,6 +26,7 @@ namespace BriERPApi.Controllers
         }
 
         // 2. OBTENER REPORTE DE VALORES
+        // URL: GET /api/productos/reporte-valor
         [HttpGet("reporte-valor")]
         public async Task<IActionResult> GetReporte()
         {
@@ -38,7 +40,8 @@ namespace BriERPApi.Controllers
         }
 
         // 3. AGREGAR NUEVO PRODUCTO
-        [HttpPost("productos")]
+        // URL: POST /api/productos
+        [HttpPost]
         public async Task<IActionResult> AgregarProducto([FromBody] Producto nuevo)
         {
             _context.Productos.Add(nuevo);
@@ -46,8 +49,9 @@ namespace BriERPApi.Controllers
             return Ok(nuevo);
         }
 
-        // 4. EDITAR PRODUCTO EXISTENTE (LA QUE FALTABA)
-        [HttpPut("productos/{id}")]
+        // 4. EDITAR PRODUCTO EXISTENTE
+        // URL: PUT /api/productos/{id}
+        [HttpPut("{id}")]
         public async Task<IActionResult> EditarProducto(int id, [FromBody] Producto productoEditado)
         {
             if (id != productoEditado.Id)
@@ -61,7 +65,6 @@ namespace BriERPApi.Controllers
                 return NotFound();
             }
 
-            // Actualizamos los valores campo por campo
             productoOriginal.Nombre = productoEditado.Nombre;
             productoOriginal.Categoria = productoEditado.Categoria;
             productoOriginal.Precio = productoEditado.Precio;
@@ -81,7 +84,8 @@ namespace BriERPApi.Controllers
         }
 
         // 5. ELIMINAR PRODUCTO
-        [HttpDelete("productos/{id}")]
+        // URL: DELETE /api/productos/{id}
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Eliminar(int id)
         {
             var producto = await _context.Productos.FindAsync(id);

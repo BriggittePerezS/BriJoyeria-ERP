@@ -14,7 +14,7 @@ function App() {
   });
 
   // ⚠️ CAMBIA ESTO: Usa la URL de tu BACKEND (Web Service), 
-  const API_URL = "https://brijoyeria-erp.onrender.com/api"; 
+  const API_URL = "https://brijoyeria-erp.onrender.com/api/productos"; 
 
   const cargarDatos = async () => {
     try {
