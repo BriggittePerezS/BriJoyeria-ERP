@@ -18,7 +18,7 @@ function App() {
 
   const cargarDatos = async () => {
     try {
-      const resProds = await axios.get(`${API_URL}/productos`);
+      const resProds = await axios.get(`${API_URL}`);
       const resRep = await axios.get(`${API_URL}/reporte-valor`);
       setProductos(resProds.data);
       setProductosFiltrados(resProds.data);
@@ -39,7 +39,7 @@ function App() {
         Stock: parseInt(nuevaJoya.stock) || 1,
         ImagenUrl: nuevaJoya.imagenUrl || ""
       };
-      await axios.post(`${API_URL}/productos`, joyaFinal);
+      await axios.post(API_URL, joyaFinal);
       setNuevaJoya({ nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: '' });
       await cargarDatos();
       alert("💎 Joya guardada!");
@@ -53,7 +53,7 @@ function App() {
   const eliminarJoya = async (id) => {
     if (window.confirm("¿Eliminar de la bóveda?")) {
       try {
-        await axios.delete(`${API_URL}/productos/${id}`);
+        await axios.delete(`${API_URL}/${id}`);
         await cargarDatos();
       } catch (error) {
         alert("Error al eliminar.");
