@@ -3,55 +3,75 @@ import axios from 'axios';
 
 function App() {
   const [productos, setProductos] = useState([]);
-  const [productosFiltrados, setProductosFiltrados] = useState([]);
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(false);
-  const [filtroActivo, setFiltroActivo] = useState('Todos');
-  const [editandoJoya, setEditandoJoya] = useState(null);
+  const [editandoId, setEditandoId] = useState(null); // Para saber si estamos editando
 
   const [nuevaJoya, setNuevaJoya] = useState({
     nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: ''
   });
 
-  // ⚠️ CAMBIA ESTO: Usa la URL de tu BACKEND (Web Service), 
-  const API_URL = "https://brijoyeria-erp.onrender.com/api/productos"; 
+  const API_URL = "https://brijoyeria-erp.onrender.com/api/productos";
 
   const cargarDatos = async () => {
     try {
-      const resProds = await axios.get(`${API_URL}`);
+      const resProds = await axios.get(API_URL);
       const resRep = await axios.get(`${API_URL}/reporte-valor`);
       setProductos(resProds.data);
-      setProductosFiltrados(resProds.data);
       setReporte(resRep.data);
     } catch (error) {
       console.error("Error al cargar:", error);
     }
   };
 
-  const registrarJoya = async (e) => {
+  // Función para preparar el formulario para editar
+  const prepararEdicion = (joya) => {
+    setEditandoId(joya.id);
+    setNuevaJoya({
+      nombre: joya.nombre,
+      categoria: joya.categoria,
+      precio: joya.precio,
+      stock: joya.stock,
+      imagenUrl: joya.imagenUrl
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube al formulario
+  };
+
+  const guardarJoya = async (e) => {
     e.preventDefault();
     setCargando(true);
     try {
       const joyaFinal = {
+        Id: editandoId || 0, // Si es nuevo es 0, si no, el ID real
         Nombre: nuevaJoya.nombre,
-        Categoria: nuevaJoya.categoria || "General",
-        Precio: parseFloat(nuevaJoya.precio) || 0,
-        Stock: parseInt(nuevaJoya.stock) || 1,
-        ImagenUrl: nuevaJoya.imagenUrl || ""
+        Categoria: nuevaJoya.categoria,
+        Precio: parseFloat(nuevaJoya.precio),
+        Stock: parseInt(nuevaJoya.stock),
+        ImagenUrl: nuevaJoya.imagenUrl
       };
-      await axios.post(API_URL, joyaFinal);
+
+      if (editandoId) {
+        // MODO EDITAR (PUT)
+        await axios.put(`${API_URL}/${editandoId}`, joyaFinal);
+        alert("💎 Joya actualizada!");
+      } else {
+        // MODO CREAR (POST)
+        await axios.post(API_URL, joyaFinal);
+        alert("💎 Joya guardada!");
+      }
+
       setNuevaJoya({ nombre: '', categoria: '', precio: '', stock: 1, imagenUrl: '' });
+      setEditandoId(null);
       await cargarDatos();
-      alert("💎 Joya guardada!");
     } catch (error) {
-      alert("❌ Error de conexión. Revisa la URL del backend.");
+      alert("❌ Error al procesar la joya.");
     } finally {
       setCargando(false);
     }
   };
 
   const eliminarJoya = async (id) => {
-    if (window.confirm("¿Eliminar de la bóveda?")) {
+    if (window.confirm("¿Eliminar permanentemente?")) {
       try {
         await axios.delete(`${API_URL}/${id}`);
         await cargarDatos();
@@ -59,12 +79,6 @@ function App() {
         alert("Error al eliminar.");
       }
     }
-  };
-
-  const filtrarPor = (cat) => {
-    setFiltroActivo(cat);
-    if (cat === 'Todos') setProductosFiltrados(productos);
-    else setProductosFiltrados(productos.filter(p => p.categoria === cat));
   };
 
   useEffect(() => { cargarDatos(); }, []);
@@ -85,38 +99,74 @@ function App() {
         </div>
       </header>
 
-      <section className="max-w-7xl mx-auto mb-12 bg-[#0a111e] p-8 rounded-3xl border border-gray-800">
-        <form onSubmit={registrarJoya} className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <input className="p-4 bg-[#050b14] border border-gray-800 rounded-xl" placeholder="Nombre" value={nuevaJoya.nombre} onChange={e => setNuevaJoya({...nuevaJoya, nombre: e.target.value})} required />
-          <select className="p-4 bg-[#050b14] border border-gray-800 rounded-xl" value={nuevaJoya.categoria} onChange={e => setNuevaJoya({...nuevaJoya, categoria: e.target.value})} required>
+      {/* FORMULARIO */}
+      <section className="max-w-7xl mx-auto mb-12 bg-[#0a111e] p-8 rounded-3xl border border-[#00f2ea]/20 shadow-lg shadow-[#00f2ea]/5">
+        <h2 className="mb-4 text-[#00f2ea] font-bold uppercase tracking-widest text-xs">
+            {editandoId ? "🔧 Editando Registro" : "✨ Nuevo Registro"}
+        </h2>
+        <form onSubmit={guardarJoya} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <input 
+            className="p-4 bg-[#050b14] border border-gray-800 rounded-xl focus:border-[#00f2ea] outline-none" 
+            placeholder="Ej: Anillo Diamante 18k" 
+            value={nuevaJoya.nombre} 
+            onChange={e => setNuevaJoya({...nuevaJoya, nombre: e.target.value})} required 
+          />
+          <select 
+            className="p-4 bg-[#050b14] border border-gray-800 rounded-xl focus:border-[#00f2ea] outline-none" 
+            value={nuevaJoya.categoria} 
+            onChange={e => setNuevaJoya({...nuevaJoya, categoria: e.target.value})} required
+          >
             <option value="">Categoría...</option>
             <option value="Anillo">ANILLO</option>
             <option value="Collar">COLLAR</option>
             <option value="Zarcillo">ZARCILLO</option>
             <option value="Reloj">RELOJ</option>
           </select>
-          <input type="number" className="p-4 bg-[#050b14] border border-gray-800 rounded-xl" placeholder="Precio" value={nuevaJoya.precio} onChange={e => setNuevaJoya({...nuevaJoya, precio: e.target.value})} required />
-          <input className="p-4 bg-[#050b14] border border-gray-800 rounded-xl" placeholder="URL Imagen" value={nuevaJoya.imagenUrl} onChange={e => setNuevaJoya({...nuevaJoya, imagenUrl: e.target.value})} />
-          <button className="bg-[#00f2ea] text-[#050b14] font-bold rounded-xl hover:scale-105 transition-transform">{cargando ? '...' : 'REGISTRAR'}</button>
+          <input 
+            type="number" 
+            className="p-4 bg-[#050b14] border border-gray-800 rounded-xl focus:border-[#00f2ea] outline-none" 
+            placeholder="Precio (Ej: 1500)" 
+            value={nuevaJoya.precio} 
+            onChange={e => setNuevaJoya({...nuevaJoya, precio: e.target.value})} required 
+          />
+          <input 
+            className="p-4 bg-[#050b14] border border-gray-800 rounded-xl focus:border-[#00f2ea] outline-none" 
+            placeholder="URL de Imagen (Opcional)" 
+            value={nuevaJoya.imagenUrl} 
+            onChange={e => setNuevaJoya({...nuevaJoya, imagenUrl: e.target.value})} 
+          />
+          <div className="flex gap-2">
+            <button className="flex-1 bg-[#00f2ea] text-[#050b14] font-bold rounded-xl hover:scale-105 transition-all">
+                {cargando ? '...' : (editandoId ? 'ACTUALIZAR' : 'REGISTRAR')}
+            </button>
+            {editandoId && (
+                <button 
+                    type="button" 
+                    onClick={() => {setEditandoId(null); setNuevaJoya({nombre:'', categoria:'', precio:'', stock:1, imagenUrl:''})}}
+                    className="px-4 bg-gray-800 rounded-xl hover:bg-gray-700"
+                >
+                    X
+                </button>
+            )}
+          </div>
         </form>
       </section>
 
-      <div className="max-w-7xl mx-auto flex gap-2 mb-8">
-        {['Todos', 'Anillo', 'Collar', 'Zarcillo', 'Reloj'].map(cat => (
-          <button key={cat} onClick={() => filtrarPor(cat)} className={`px-4 py-2 rounded-lg text-xs font-bold border ${filtroActivo === cat ? 'border-[#00f2ea] text-[#00f2ea]' : 'border-gray-800 text-gray-500'}`}>{cat.toUpperCase()}</button>
-        ))}
-      </div>
-
+      {/* LISTA DE JOYAS */}
       <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {productosFiltrados.map(p => (
-          <div key={p.id} className="bg-[#0a111e] rounded-2xl border border-gray-800 overflow-hidden group">
-            <img src={p.imagenUrl || 'https://via.placeholder.com/400'} className="h-48 w-full object-cover" alt={p.nombre} />
+        {productos.map(p => (
+          <div key={p.id} className="bg-[#0a111e] rounded-2xl border border-gray-800 overflow-hidden group hover:border-[#00f2ea]/50 transition-colors">
+            <img src={p.imagenUrl || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=400'} className="h-48 w-full object-cover grayscale group-hover:grayscale-0 transition-all" alt={p.nombre} />
             <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">{p.nombre}</h3>
-              <div className="flex justify-between items-center">
-                <p className="text-2xl font-mono text-[#00f2ea]">${p.precio?.toLocaleString()}</p>
-                <button onClick={() => eliminarJoya(p.id)} className="text-red-500 hover:text-red-300">Eliminar</button>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] text-[#00f2ea] font-bold">{p.categoria?.toUpperCase()}</p>
+                <div className="flex gap-3">
+                    <button onClick={() => prepararEdicion(p)} className="text-gray-400 hover:text-[#00f2ea] text-xs font-bold">EDITAR</button>
+                    <button onClick={() => eliminarJoya(p.id)} className="text-gray-600 hover:text-red-500 text-xs font-bold">X</button>
+                </div>
               </div>
+              <h3 className="text-lg font-bold mb-4">{p.nombre}</h3>
+              <p className="text-2xl font-mono text-[#00f2ea]">${p.precio?.toLocaleString()}</p>
             </div>
           </div>
         ))}
