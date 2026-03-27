@@ -155,8 +155,16 @@ function App() {
       {/* LISTA DE JOYAS */}
       <main className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {productos.map(p => (
-          <div key={p.id} className="bg-[#0a111e] rounded-2xl border border-gray-800 overflow-hidden group hover:border-[#00f2ea]/50 transition-colors">
-            <img src={p.imagenUrl || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=400'} className="h-48 w-full object-cover grayscale group-hover:grayscale-0 transition-all" alt={p.nombre} />
+          <div key={p.id} className="bg-[#0a111e] rounded-2xl border border-gray-800 overflow-hidden group hover:border-[#00f2ea]/50 transition-all duration-300">
+            {/* Contenedor de la imagen para el zoom */}
+            <div className="overflow-hidden h-48 w-full">
+                <img 
+                    src={p.imagenUrl || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=400'} 
+                    className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500" 
+                    alt={p.nombre} 
+                />
+            </div>
+            
             <div className="p-6">
               <div className="flex justify-between items-start mb-2">
                 <p className="text-[10px] text-[#00f2ea] font-bold">{p.categoria?.toUpperCase()}</p>
